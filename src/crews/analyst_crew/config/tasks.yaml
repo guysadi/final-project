@@ -1,0 +1,52 @@
+ingest_and_clean:
+  description: >
+    1. Call profile_raw_data to see the raw dataset's quality problems.
+    2. Call clean_data to run the cleaning pipeline and save clean_data.csv.
+    Then summarise what you found and what the pipeline changed.
+  expected_output: >
+    A markdown summary with: raw vs. clean row counts, every quality problem found
+    (duplicates, inconsistent category spellings, missing values) and exactly how each
+    one was handled, with the numbers from the cleaning log.
+  agent: data_engineer
+
+explore_data:
+  description: >
+    Call run_eda to analyse clean_data.csv and render eda_report.html. Using only the
+    statistics the tool returns, identify the strongest churn drivers.
+  expected_output: >
+    A markdown list of the 6-8 most important findings about churn, each with the exact
+    figures behind it (churn rates, correlations, group means). Include the overall
+    churn rate and the riskiest segments.
+  agent: eda_analyst
+
+write_insights:
+  description: >
+    Write insights.md for Harbor & Vale's retention team based on the cleaning summary and
+    the EDA findings you received. Audience: managers, not data scientists.
+  expected_output: >
+    A markdown document (no code fences around it) with these sections:
+    "# Customer Churn — Business Insights", "## Headline", "## Who churns",
+    "## What drives churn", "## Recommended actions", "## Data notes".
+    Every claim must cite a figure from the analysis. Keep it under 500 words.
+  agent: business_analyst
+  context:
+    - ingest_and_clean
+    - explore_data
+
+write_contract:
+  description: >
+    Call write_dataset_contract to publish the contract for the Data Scientist crew.
+    Provide:
+    - units for every numeric column that has one (Tenure in months, CashbackAmount in USD,
+      DaySinceLastOrder in days, HourSpendOnApp in hours, OrderAmountHikeFromlastYear in
+      percent, WarehouseToHome in km, counts as "count", etc.);
+    - assumptions the modelers must know, based on the cleaning summary: what one row
+      represents, how duplicates and missing values were handled, which category spellings
+      were merged, and that the target is Churn (1 = churned).
+    If the tool returns an ERROR, read it, fix your input and call it again.
+  expected_output: >
+    The tool's confirmation that the contract was saved and validated, followed by the
+    list of assumptions you wrote.
+  agent: contract_author
+  context:
+    - ingest_and_clean
