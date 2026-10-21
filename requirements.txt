@@ -1,0 +1,10 @@
+crewai==1.15.28
+pandas==3.0.6
+scikit-learn==1.9.1
+matplotlib
+seaborn
+joblib
+streamlit
+python-dotenv
+kagglehub
+openpyxl

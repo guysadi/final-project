@@ -1,0 +1,20 @@
+# Secrets
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Raw data is downloaded by scripts/download_data.py, not committed
+data/raw/*
+!data/raw/.gitkeep
+
+# Run logs (the latest run summary is kept in artifacts/)
+logs/*.log
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
