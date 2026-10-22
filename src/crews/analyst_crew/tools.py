@@ -62,10 +62,33 @@ class RunEdaTool(BaseTool):
         return json.dumps(stats, indent=2, default=str)
 
 
+class ReadEdaStatsTool(BaseTool):
+    name: str = "read_eda_stats"
+    description: str = (
+        "Read the ground-truth statistics saved by run_eda: overall churn rate, the direction "
+        "of every churned-vs-stayed difference, churn rate by segment and by tenure. "
+        "Read-only. Takes no input.")
+
+    def _run(self) -> str:
+        if not paths.EDA_STATS.exists():
+            return "ERROR: eda_stats.json does not exist yet. run_eda must run first."
+        stats = json.loads(paths.EDA_STATS.read_text())
+        keys = ("rows", "overall_churn_rate", "churned_customers", "churned_vs_stayed",
+                "churn_rate_by_segment", "tenure_bucket_churn")
+        return json.dumps({k: stats[k] for k in keys}, indent=2)
+
+
+class ColumnUnit(BaseModel):
+    column: str = Field(description="Column name, e.g. CashbackAmount")
+    unit: str = Field(description="Unit of measure, e.g. USD, months, days, percent, count")
+
+
 class WriteContractInput(BaseModel):
-    units: dict[str, str] = Field(
-        description="Unit of measure for each numeric column where one applies, "
-                    "e.g. {\"Tenure\": \"months\", \"CashbackAmount\": \"USD\"}.")
+    # A list of pairs, not dict[str, str]: OpenAI strict function calling turns a free-form
+    # dict into {"properties": {}, "additionalProperties": false}, so the model can only
+    # ever send {} — which is exactly what it did in the first real runs.
+    units: list[ColumnUnit] = Field(
+        description="One entry per numeric column: its unit of measure.")
     assumptions: list[str] = Field(
         description="Plain-English statements the modeling crew may rely on about this data, "
                     "e.g. how missing values were handled or what one row represents.")
@@ -76,19 +99,25 @@ class WriteContractTool(BaseTool):
     description: str = (
         "Write dataset_contract.json. The schema (columns, dtypes, ranges, allowed values) is "
         "derived automatically from clean_data.csv and column descriptions come from the data "
-        "dictionary; you supply the units and the assumptions. The contract is validated "
-        "against the clean data before it is saved.")
+        "dictionary; you supply the units and the assumptions. A unit is REQUIRED for every "
+        "numeric column with a range — if any is missing the tool returns an ERROR listing "
+        "them. The contract is validated against the clean data before it is saved.")
     args_schema: type[BaseModel] = WriteContractInput
 
-    def _run(self, units: dict[str, str], assumptions: list[str]) -> str:
+    def _run(self, units: list, assumptions: list[str]) -> str:
         if not paths.CLEAN_DATA.exists():
             return "ERROR: clean_data.csv does not exist yet."
+        # CrewAI may hand over pydantic models or plain dicts depending on the call path.
+        unit_map = {}
+        for u in units:
+            u = u.model_dump() if isinstance(u, BaseModel) else u
+            unit_map[u["column"]] = u["unit"]
         try:
             contract = write_contract(paths.CLEAN_DATA, paths.CONTRACT,
                                       descriptions=load_data_dictionary(paths.RAW_DATA),
-                                      units=units, assumptions=assumptions)
+                                      units=unit_map, assumptions=assumptions)
         except ContractViolation as e:
-            return f"ERROR: the contract does not hold on the clean data:\n{e}"
+            return f"ERROR: contract not saved. Fix your input and call this tool again.\n{e}"
         return (f"Contract v{contract['version']} saved to {paths.CONTRACT.name} with "
                 f"{len(contract['columns'])} columns, target '{contract['target']}', "
                 f"{len(contract['assumptions'])} assumptions. Validated against clean_data.csv: OK.")

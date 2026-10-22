@@ -12,7 +12,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.validation.contract import validate_contract_structure, validate_data_against_contract
+from src.validation.contract import (
+    ContractViolation,
+    validate_contract_structure,
+    validate_data_against_contract,
+)
 
 ID_COL = "CustomerID"
 TARGET = "Churn"
@@ -21,6 +25,11 @@ CATEGORICAL_INT_MAX_LEVELS = 6
 # but a ×100 unit change (dollars→cents) still fails loudly.
 MAX_HEADROOM = 1.5
 CONTRACT_VERSION = "1.0"
+# Facts that hold by construction, so they are not left to an agent to phrase.
+BASE_ASSUMPTIONS = [
+    f"One row per customer; {ID_COL} is unique.",
+    f"{TARGET} is the target: 1 = customer churned, 0 = customer stayed.",
+]
 
 
 def _numeric_spec(series: pd.Series) -> dict:
@@ -70,8 +79,24 @@ def build_contract(df: pd.DataFrame, descriptions: dict[str, str] | None = None,
         # Allow the row count to shrink by 20% on a refresh before the gate objects.
         "min_rows": int(len(df) * 0.8),
         "columns": columns,
-        "assumptions": assumptions or [],
+        "assumptions": BASE_ASSUMPTIONS + (assumptions or []),
     }
+
+
+def columns_requiring_units(df: pd.DataFrame) -> list[str]:
+    """Every column with a numeric range must say what it is measured in —
+    a missing unit is exactly how dollars got read as cents."""
+    return [c for c, spec in derive_schema(df).items() if "max" in spec]
+
+
+def check_units(df: pd.DataFrame, units: dict[str, str]) -> None:
+    errors = []
+    if missing := [c for c in columns_requiring_units(df) if not units.get(c, "").strip()]:
+        errors.append(f"Units are required for these numeric columns: {missing}")
+    if unknown := sorted(set(units) - set(df.columns)):
+        errors.append(f"Units given for columns that do not exist: {unknown}")
+    if errors:
+        raise ContractViolation("Contract units check", errors)
 
 
 def write_contract(clean_path: str | Path, contract_path: str | Path,
@@ -80,6 +105,7 @@ def write_contract(clean_path: str | Path, contract_path: str | Path,
                    assumptions: list[str] | None = None) -> dict:
     """Build the contract, prove it holds on the data it describes, then save it."""
     df = pd.read_csv(clean_path)
+    check_units(df, units or {})
     contract = build_contract(df, descriptions, units, assumptions)
     for report in (validate_contract_structure(contract),
                    validate_data_against_contract(df, contract)):

@@ -36,6 +36,15 @@ def compute_stats(df: pd.DataFrame) -> dict:
         "describe": df[numeric].describe().round(2).to_dict(),
         "correlation_with_churn": corr.round(3).to_dict(),
         "mean_by_churn": means_by_churn.round(2).to_dict(orient="index"),
+        # Spelled out so an LLM reading the stats cannot flip the direction of a finding.
+        # Segment columns (flags, tiers, scores) are left out: their means read as nonsense
+        # ("0.53 complaints") and churn_rate_by_segment already covers them.
+        "churned_vs_stayed": [
+            f"{col}: churned customers average {row.churned:g} vs {row.stayed:g} for those who "
+            f"stayed — {'HIGHER' if row.churned > row.stayed else 'LOWER'} among churners"
+            for col, row in means_by_churn.round(2).iterrows()
+            if row.churned != row.stayed and col not in segments
+        ],
         "churn_rate_by_segment": {
             col: df.groupby(col)[TARGET].agg(["mean", "size"]).round(4)
                  .rename(columns={"mean": "churn_rate", "size": "customers"})

@@ -7,6 +7,7 @@ from src import paths
 from src.crews.analyst_crew.tools import (
     CleanDataTool,
     ProfileRawDataTool,
+    ReadEdaStatsTool,
     RunEdaTool,
     WriteContractTool,
 )
@@ -28,12 +29,17 @@ class AnalystCrew:
     @agent
     def eda_analyst(self) -> Agent:
         return Agent(config=self.agents_config["eda_analyst"],  # type: ignore[index]
-                     tools=[RunEdaTool()], llm=get_llm(), verbose=True)
+                     tools=[RunEdaTool()], llm=get_llm(reasoning=True), verbose=True)
 
     @agent
     def business_analyst(self) -> Agent:
         return Agent(config=self.agents_config["business_analyst"],  # type: ignore[index]
-                     llm=get_llm(), verbose=True)
+                     llm=get_llm(reasoning=True), verbose=True)
+
+    @agent
+    def insights_reviewer(self) -> Agent:
+        return Agent(config=self.agents_config["insights_reviewer"],  # type: ignore[index]
+                     tools=[ReadEdaStatsTool()], llm=get_llm(reasoning=True), verbose=True)
 
     @agent
     def contract_author(self) -> Agent:
@@ -50,8 +56,13 @@ class AnalystCrew:
 
     @task
     def write_insights(self) -> Task:
-        return Task(config=self.tasks_config["write_insights"],  # type: ignore[index]
-                    output_file=str(paths.INSIGHTS))
+        return Task(config=self.tasks_config["write_insights"])  # type: ignore[index]
+
+    @task
+    def review_insights(self) -> Task:
+        # Saved by run_analyst_crew, not output_file: CrewAI strips the leading "/" from
+        # absolute output_file paths and writes them relative to the current directory.
+        return Task(config=self.tasks_config["review_insights"])  # type: ignore[index]
 
     @task
     def write_contract(self) -> Task:
@@ -63,6 +74,14 @@ class AnalystCrew:
                     process=Process.sequential, verbose=True)
 
 
+def _strip_code_fence(text: str) -> str:
+    """LLMs sometimes wrap markdown in ```markdown ... ``` despite being told not to."""
+    lines = text.strip().splitlines()
+    if lines and lines[0].startswith("```") and lines[-1].strip() == "```":
+        lines = lines[1:-1]
+    return "\n".join(lines)
+
+
 def run_analyst_crew() -> list:
     """Run Crew 1 from scratch and return the paths of its four artifacts.
 
@@ -71,7 +90,10 @@ def run_analyst_crew() -> list:
     """
     for p in paths.CREW1_ARTIFACTS + [paths.CLEANING_SUMMARY, paths.EDA_STATS]:
         p.unlink(missing_ok=True)
-    AnalystCrew().crew().kickoff()
+    result = AnalystCrew().crew().kickoff()
+    insights = next(t.raw for t in result.tasks_output if t.name == "review_insights")
+    paths.INSIGHTS.write_text(_strip_code_fence(insights).strip() + "\n")
+    print(f"Token usage: {result.token_usage}")
     missing = [p.name for p in paths.CREW1_ARTIFACTS if not p.exists()]
     if missing:
         raise RuntimeError(f"Data Analyst crew finished without producing: {missing}")

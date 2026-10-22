@@ -7,8 +7,9 @@ import pytest
 from src import paths
 from src.crews.analyst_crew import tools
 from src.crews.analyst_crew.cleaning import clean
-from src.crews.analyst_crew.contract_builder import build_contract
-from src.validation.contract import validate_data_against_contract
+from src.crews.analyst_crew.contract_builder import build_contract, check_units, columns_requiring_units
+from src.crews.analyst_crew.eda import compute_stats
+from src.validation.contract import ContractViolation, validate_data_against_contract
 
 
 @pytest.fixture
@@ -95,11 +96,53 @@ def test_tools_produce_artifacts_in_order(tmp_paths):
     assert paths.EDA_REPORT.exists()
     assert 0 < stats["overall_churn_rate"] < 1
 
-    msg = tools.WriteContractTool()._run(units={"Tenure": "months"}, assumptions=["One row per customer"])
+    # The agent's first attempt in a real run sent no units at all — the tool must refuse.
+    msg = tools.WriteContractTool()._run(units={}, assumptions=[])
+    assert msg.startswith("ERROR") and "Units are required" in msg
+    assert not paths.CONTRACT.exists()
+
+    df = pd.read_csv(paths.CLEAN_DATA)
+    units = [{"column": c, "unit": "count"} for c in columns_requiring_units(df) if c != "Tenure"]
+    units.append({"column": "Tenure", "unit": "months"})
+    msg = tools.WriteContractTool()._run(units=units, assumptions=["Missing values median-filled"])
     assert "Validated" in msg
     contract = json.loads(paths.CONTRACT.read_text())
     assert contract["columns"]["Tenure"]["unit"] == "months"
     assert contract["columns"]["Churn"]["description"] == "Churn flag"
+    assert contract["assumptions"][0].startswith("One row per customer")
+
+
+def test_contract_tool_schema_lets_the_model_send_units():
+    """Regression: a dict[str, str] field became an object with no allowed keys under
+    OpenAI strict mode, so the agent could only ever send units={}."""
+    from crewai.utilities.agent_utils import convert_tools_to_openai_schema
+
+    schema = convert_tools_to_openai_schema([tools.WriteContractTool()])[0][0]
+    units = schema["function"]["parameters"]["properties"]["units"]
+    assert units["type"] == "array"
+    assert {"column", "unit"} <= set(units["items"]["properties"])
+
+
+def test_units_for_unknown_columns_are_rejected(raw):
+    df, _ = clean(raw)
+    units = {c: "count" for c in columns_requiring_units(df)} | {"Revenue": "USD"}
+    with pytest.raises(ContractViolation, match="do not exist"):
+        check_units(df, units)
+
+
+def test_eda_states_direction_of_each_difference():
+    n = 20
+    df = pd.DataFrame({
+        "CustomerID": range(n),
+        "Churn": [1] * 10 + [0] * 10,
+        "Tenure": list(range(10)) + list(range(10, 20)),          # churners: shorter tenure
+        "CashbackAmount": [300.0 + i for i in range(10)] + [100.0 + i for i in range(10)],
+        "Complain": [1, 0] * 10,                                   # a flag, not a measure
+    })
+    lines = {s.split(":")[0]: s for s in compute_stats(df)["churned_vs_stayed"]}
+    assert "average 4.5 vs 14.5" in lines["Tenure"] and "LOWER among churners" in lines["Tenure"]
+    assert "HIGHER among churners" in lines["CashbackAmount"]
+    assert "Complain" not in lines  # covered by churn_rate_by_segment instead
 
 
 def test_crew_wiring(monkeypatch):
@@ -107,6 +150,7 @@ def test_crew_wiring(monkeypatch):
     from src.crews.analyst_crew.crew import AnalystCrew
 
     crew = AnalystCrew().crew()
-    assert len(crew.agents) == 4
+    assert len(crew.agents) == 5
     assert [t.agent.role.strip() for t in crew.tasks] == [
-        "Data Engineer", "Exploratory Data Analyst", "Business Insights Analyst", "Dataset Contract Author"]
+        "Data Engineer", "Exploratory Data Analyst", "Business Insights Analyst",
+        "Insights Reviewer", "Dataset Contract Author"]
