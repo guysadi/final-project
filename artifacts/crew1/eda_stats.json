@@ -1,0 +1,401 @@
+{
+  "rows": 5074,
+  "overall_churn_rate": 0.1657,
+  "churned_customers": 841,
+  "describe": {
+    "Tenure": {
+      "count": 5074.0,
+      "mean": 10.16,
+      "std": 8.4,
+      "min": 0.0,
+      "25%": 3.0,
+      "50%": 9.0,
+      "75%": 15.0,
+      "max": 61.0
+    },
+    "CityTier": {
+      "count": 5074.0,
+      "mean": 1.66,
+      "std": 0.92,
+      "min": 1.0,
+      "25%": 1.0,
+      "50%": 1.0,
+      "75%": 3.0,
+      "max": 3.0
+    },
+    "WarehouseToHome": {
+      "count": 5074.0,
+      "mean": 15.44,
+      "std": 8.43,
+      "min": 5.0,
+      "25%": 9.0,
+      "50%": 13.0,
+      "75%": 19.0,
+      "max": 127.0
+    },
+    "HourSpendOnApp": {
+      "count": 5074.0,
+      "mean": 2.93,
+      "std": 0.71,
+      "min": 0.0,
+      "25%": 2.0,
+      "50%": 3.0,
+      "75%": 3.0,
+      "max": 5.0
+    },
+    "NumberOfDeviceRegistered": {
+      "count": 5074.0,
+      "mean": 3.69,
+      "std": 1.03,
+      "min": 1.0,
+      "25%": 3.0,
+      "50%": 4.0,
+      "75%": 4.0,
+      "max": 6.0
+    },
+    "SatisfactionScore": {
+      "count": 5074.0,
+      "mean": 3.03,
+      "std": 1.38,
+      "min": 1.0,
+      "25%": 2.0,
+      "50%": 3.0,
+      "75%": 4.0,
+      "max": 5.0
+    },
+    "NumberOfAddress": {
+      "count": 5074.0,
+      "mean": 4.19,
+      "std": 2.58,
+      "min": 1.0,
+      "25%": 2.0,
+      "50%": 3.0,
+      "75%": 6.0,
+      "max": 22.0
+    },
+    "Complain": {
+      "count": 5074.0,
+      "mean": 0.28,
+      "std": 0.45,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 0.0,
+      "75%": 1.0,
+      "max": 1.0
+    },
+    "OrderAmountHikeFromlastYear": {
+      "count": 5074.0,
+      "mean": 15.68,
+      "std": 3.59,
+      "min": 11.0,
+      "25%": 13.0,
+      "50%": 15.0,
+      "75%": 18.0,
+      "max": 26.0
+    },
+    "CouponUsed": {
+      "count": 5074.0,
+      "mean": 1.77,
+      "std": 1.91,
+      "min": 0.0,
+      "25%": 1.0,
+      "50%": 1.0,
+      "75%": 2.0,
+      "max": 16.0
+    },
+    "OrderCount": {
+      "count": 5074.0,
+      "mean": 3.04,
+      "std": 2.93,
+      "min": 1.0,
+      "25%": 1.0,
+      "50%": 2.0,
+      "75%": 3.0,
+      "max": 16.0
+    },
+    "DaySinceLastOrder": {
+      "count": 5074.0,
+      "mean": 4.49,
+      "std": 3.58,
+      "min": 0.0,
+      "25%": 2.0,
+      "50%": 3.0,
+      "75%": 7.0,
+      "max": 46.0
+    },
+    "CashbackAmount": {
+      "count": 5074.0,
+      "mean": 177.64,
+      "std": 49.39,
+      "min": 0.0,
+      "25%": 145.92,
+      "50%": 163.87,
+      "75%": 197.95,
+      "max": 324.99
+    }
+  },
+  "correlation_with_churn": {
+    "Tenure": -0.332,
+    "Complain": 0.249,
+    "DaySinceLastOrder": -0.148,
+    "CashbackAmount": -0.143,
+    "NumberOfDeviceRegistered": 0.117,
+    "SatisfactionScore": 0.101,
+    "CityTier": 0.098,
+    "WarehouseToHome": 0.064,
+    "NumberOfAddress": 0.052,
+    "OrderAmountHikeFromlastYear": -0.02,
+    "OrderCount": -0.017,
+    "HourSpendOnApp": 0.013,
+    "CouponUsed": 0.004
+  },
+  "mean_by_churn": {
+    "Tenure": {
+      "stayed": 11.4,
+      "churned": 3.91
+    },
+    "CityTier": {
+      "stayed": 1.62,
+      "churned": 1.86
+    },
+    "WarehouseToHome": {
+      "stayed": 15.19,
+      "churned": 16.65
+    },
+    "HourSpendOnApp": {
+      "stayed": 2.93,
+      "churned": 2.95
+    },
+    "NumberOfDeviceRegistered": {
+      "stayed": 3.63,
+      "churned": 3.96
+    },
+    "SatisfactionScore": {
+      "stayed": 2.97,
+      "churned": 3.34
+    },
+    "NumberOfAddress": {
+      "stayed": 4.13,
+      "churned": 4.5
+    },
+    "Complain": {
+      "stayed": 0.23,
+      "churned": 0.53
+    },
+    "OrderAmountHikeFromlastYear": {
+      "stayed": 15.71,
+      "churned": 15.52
+    },
+    "CouponUsed": {
+      "stayed": 1.77,
+      "churned": 1.79
+    },
+    "OrderCount": {
+      "stayed": 3.06,
+      "churned": 2.93
+    },
+    "DaySinceLastOrder": {
+      "stayed": 4.73,
+      "churned": 3.31
+    },
+    "CashbackAmount": {
+      "stayed": 180.79,
+      "churned": 161.78
+    }
+  },
+  "churned_vs_stayed": [
+    "Tenure: churned customers average 3.91 vs 11.4 for those who stayed \u2014 LOWER among churners",
+    "WarehouseToHome: churned customers average 16.65 vs 15.19 for those who stayed \u2014 HIGHER among churners",
+    "NumberOfAddress: churned customers average 4.5 vs 4.13 for those who stayed \u2014 HIGHER among churners",
+    "OrderAmountHikeFromlastYear: churned customers average 15.52 vs 15.71 for those who stayed \u2014 LOWER among churners",
+    "CouponUsed: churned customers average 1.79 vs 1.77 for those who stayed \u2014 HIGHER among churners",
+    "OrderCount: churned customers average 2.93 vs 3.06 for those who stayed \u2014 LOWER among churners",
+    "DaySinceLastOrder: churned customers average 3.31 vs 4.73 for those who stayed \u2014 LOWER among churners",
+    "CashbackAmount: churned customers average 161.78 vs 180.79 for those who stayed \u2014 LOWER among churners"
+  ],
+  "churn_rate_by_segment": {
+    "PreferredLoginDevice": {
+      "Computer": {
+        "churn_rate": 0.1956,
+        "customers": 1457
+      },
+      "Mobile Phone": {
+        "churn_rate": 0.1537,
+        "customers": 3617
+      }
+    },
+    "PreferredPaymentMode": {
+      "Cash on Delivery": {
+        "churn_rate": 0.2538,
+        "customers": 457
+      },
+      "Credit Card": {
+        "churn_rate": 0.1416,
+        "customers": 1596
+      },
+      "Debit Card": {
+        "churn_rate": 0.1501,
+        "customers": 2099
+      },
+      "E wallet": {
+        "churn_rate": 0.2278,
+        "customers": 562
+      },
+      "UPI": {
+        "churn_rate": 0.1556,
+        "customers": 360
+      }
+    },
+    "Gender": {
+      "Female": {
+        "churn_rate": 0.1525,
+        "customers": 2026
+      },
+      "Male": {
+        "churn_rate": 0.1745,
+        "customers": 3048
+      }
+    },
+    "PreferedOrderCat": {
+      "Fashion": {
+        "churn_rate": 0.1625,
+        "customers": 763
+      },
+      "Grocery": {
+        "churn_rate": 0.0437,
+        "customers": 366
+      },
+      "Laptop & Accessory": {
+        "churn_rate": 0.105,
+        "customers": 1847
+      },
+      "Mobile Phone": {
+        "churn_rate": 0.2629,
+        "customers": 1856
+      },
+      "Others": {
+        "churn_rate": 0.0785,
+        "customers": 242
+      }
+    },
+    "MaritalStatus": {
+      "Divorced": {
+        "churn_rate": 0.1462,
+        "customers": 848
+      },
+      "Married": {
+        "churn_rate": 0.113,
+        "customers": 2673
+      },
+      "Single": {
+        "churn_rate": 0.2672,
+        "customers": 1553
+      }
+    },
+    "CityTier": {
+      "1": {
+        "churn_rate": 0.1397,
+        "customers": 3306
+      },
+      "2": {
+        "churn_rate": 0.1744,
+        "customers": 195
+      },
+      "3": {
+        "churn_rate": 0.2193,
+        "customers": 1573
+      }
+    },
+    "HourSpendOnApp": {
+      "0": {
+        "churn_rate": 0.0,
+        "customers": 3
+      },
+      "1": {
+        "churn_rate": 0.0,
+        "customers": 33
+      },
+      "2": {
+        "churn_rate": 0.1584,
+        "customers": 1332
+      },
+      "3": {
+        "churn_rate": 0.1732,
+        "customers": 2645
+      },
+      "4": {
+        "churn_rate": 0.1626,
+        "customers": 1058
+      },
+      "5": {
+        "churn_rate": 0.0,
+        "customers": 3
+      }
+    },
+    "NumberOfDeviceRegistered": {
+      "1": {
+        "churn_rate": 0.0876,
+        "customers": 217
+      },
+      "2": {
+        "churn_rate": 0.0863,
+        "customers": 255
+      },
+      "3": {
+        "churn_rate": 0.1452,
+        "customers": 1522
+      },
+      "4": {
+        "churn_rate": 0.1621,
+        "customers": 2135
+      },
+      "5": {
+        "churn_rate": 0.2265,
+        "customers": 799
+      },
+      "6": {
+        "churn_rate": 0.3562,
+        "customers": 146
+      }
+    },
+    "SatisfactionScore": {
+      "1": {
+        "churn_rate": 0.1151,
+        "customers": 1077
+      },
+      "2": {
+        "churn_rate": 0.1263,
+        "customers": 586
+      },
+      "3": {
+        "churn_rate": 0.1721,
+        "customers": 1505
+      },
+      "4": {
+        "churn_rate": 0.171,
+        "customers": 930
+      },
+      "5": {
+        "churn_rate": 0.2305,
+        "customers": 976
+      }
+    },
+    "Complain": {
+      "0": {
+        "churn_rate": 0.1077,
+        "customers": 3640
+      },
+      "1": {
+        "churn_rate": 0.3131,
+        "customers": 1434
+      }
+    }
+  },
+  "tenure_bucket_churn": {
+    "0-1": 0.513,
+    "2-6": 0.0737,
+    "7-12": 0.0954,
+    "13-24": 0.0681,
+    "25+": 0.0
+  }
+}

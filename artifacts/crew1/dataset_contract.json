@@ -1,0 +1,238 @@
+{
+  "dataset": "clean_data.csv",
+  "version": "1.0",
+  "primary_key": "CustomerID",
+  "target": "Churn",
+  "target_description": "1 = customer churned, 0 = customer stayed",
+  "min_rows": 4059,
+  "columns": {
+    "CustomerID": {
+      "dtype": "integer",
+      "nullable": false,
+      "description": "Unique customer ID"
+    },
+    "Churn": {
+      "dtype": "integer",
+      "nullable": false,
+      "allowed_values": [
+        0,
+        1
+      ],
+      "description": "Churn Flag"
+    },
+    "Tenure": {
+      "dtype": "integer",
+      "nullable": false,
+      "min": 0,
+      "max": 92,
+      "observed_range": [
+        0,
+        61
+      ],
+      "description": "Tenure of customer in organization",
+      "unit": "months"
+    },
+    "PreferredLoginDevice": {
+      "dtype": "string",
+      "nullable": false,
+      "allowed_values": [
+        "Computer",
+        "Mobile Phone"
+      ],
+      "description": "Preferred login device of customer"
+    },
+    "CityTier": {
+      "dtype": "integer",
+      "nullable": false,
+      "allowed_values": [
+        1,
+        2,
+        3
+      ],
+      "description": "City tier"
+    },
+    "WarehouseToHome": {
+      "dtype": "integer",
+      "nullable": false,
+      "min": 0,
+      "max": 191,
+      "observed_range": [
+        5,
+        127
+      ],
+      "description": "Distance in between warehouse to home of customer",
+      "unit": "km"
+    },
+    "PreferredPaymentMode": {
+      "dtype": "string",
+      "nullable": false,
+      "allowed_values": [
+        "Cash on Delivery",
+        "Credit Card",
+        "Debit Card",
+        "E wallet",
+        "UPI"
+      ],
+      "description": "Preferred payment method of customer"
+    },
+    "Gender": {
+      "dtype": "string",
+      "nullable": false,
+      "allowed_values": [
+        "Female",
+        "Male"
+      ],
+      "description": "Gender of customer"
+    },
+    "HourSpendOnApp": {
+      "dtype": "integer",
+      "nullable": false,
+      "allowed_values": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "description": "Number of hours spend on mobile application or website",
+      "unit": "hours"
+    },
+    "NumberOfDeviceRegistered": {
+      "dtype": "integer",
+      "nullable": false,
+      "allowed_values": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "description": "Total number of deceives is registered on particular customer"
+    },
+    "PreferedOrderCat": {
+      "dtype": "string",
+      "nullable": false,
+      "allowed_values": [
+        "Fashion",
+        "Grocery",
+        "Laptop & Accessory",
+        "Mobile Phone",
+        "Others"
+      ],
+      "description": "Preferred order category of customer in last month"
+    },
+    "SatisfactionScore": {
+      "dtype": "integer",
+      "nullable": false,
+      "allowed_values": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "description": "Satisfactory score of customer on service"
+    },
+    "MaritalStatus": {
+      "dtype": "string",
+      "nullable": false,
+      "allowed_values": [
+        "Divorced",
+        "Married",
+        "Single"
+      ],
+      "description": "Marital status of customer"
+    },
+    "NumberOfAddress": {
+      "dtype": "integer",
+      "nullable": false,
+      "min": 0,
+      "max": 33,
+      "observed_range": [
+        1,
+        22
+      ],
+      "description": "Total number of added added on particular customer",
+      "unit": "count"
+    },
+    "Complain": {
+      "dtype": "integer",
+      "nullable": false,
+      "allowed_values": [
+        0,
+        1
+      ],
+      "description": "Any complaint has been raised in last month"
+    },
+    "OrderAmountHikeFromlastYear": {
+      "dtype": "integer",
+      "nullable": false,
+      "min": 0,
+      "max": 39,
+      "observed_range": [
+        11,
+        26
+      ],
+      "description": "Percentage increases in order from last year",
+      "unit": "percent"
+    },
+    "CouponUsed": {
+      "dtype": "integer",
+      "nullable": false,
+      "min": 0,
+      "max": 24,
+      "observed_range": [
+        0,
+        16
+      ],
+      "description": "Total number of coupon has been used in last month",
+      "unit": "count"
+    },
+    "OrderCount": {
+      "dtype": "integer",
+      "nullable": false,
+      "min": 0,
+      "max": 24,
+      "observed_range": [
+        1,
+        16
+      ],
+      "description": "Total number of orders has been places in last month",
+      "unit": "count"
+    },
+    "DaySinceLastOrder": {
+      "dtype": "integer",
+      "nullable": false,
+      "min": 0,
+      "max": 69,
+      "observed_range": [
+        0,
+        46
+      ],
+      "description": "Day Since last order by customer",
+      "unit": "days"
+    },
+    "CashbackAmount": {
+      "dtype": "number",
+      "nullable": false,
+      "min": 0,
+      "max": 487.49,
+      "observed_range": [
+        0.0,
+        324.99
+      ],
+      "description": "Average cashback in last month",
+      "unit": "USD"
+    }
+  },
+  "assumptions": [
+    "One row per customer; CustomerID is unique.",
+    "Churn is the target: 1 = customer churned, 0 = customer stayed.",
+    "One row represents one customer.",
+    "556 duplicate rows were removed from the dataset.",
+    "Missing values were filled with the median for the following columns: Tenure (9 months), WarehouseToHome (13 km), HourSpendOnApp (3 hours), OrderAmountHikeFromlastYear (15 percent), CouponUsed (1 count), OrderCount (2 count), DaySinceLastOrder (3 days).",
+    "Inconsistent category spellings were standardized: 'Phone' to 'Mobile Phone', 'CC' to 'Credit Card', 'COD' to 'Cash on Delivery', and 'Mobile' to 'Mobile Phone'."
+  ]
+}

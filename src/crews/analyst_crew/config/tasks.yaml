@@ -1,0 +1,82 @@
+ingest_and_clean:
+  description: >
+    1. Call profile_raw_data to see the raw dataset's quality problems.
+    2. Call clean_data to run the cleaning pipeline and save clean_data.csv.
+    Then summarise what you found and what the pipeline changed.
+  expected_output: >
+    A markdown summary with: raw vs. clean row counts, every quality problem found
+    (duplicates, inconsistent category spellings, missing values) and exactly how each
+    one was handled, with the numbers from the cleaning log.
+  agent: data_engineer
+
+explore_data:
+  description: >
+    Call run_eda to analyse clean_data.csv and render eda_report.html. Using only the
+    statistics the tool returns, identify the strongest churn drivers.
+    The "churned_vs_stayed" list states the direction of every difference (HIGHER or LOWER
+    among churners) — copy that direction exactly. If a finding is counterintuitive
+    (e.g. churners report higher satisfaction), say so plainly instead of explaining it away.
+  expected_output: >
+    A markdown list of the 6-8 most important findings about churn, each with the exact
+    figures behind it (churn rates, correlations, group means). Include the overall
+    churn rate and the riskiest segments.
+  agent: eda_analyst
+
+write_insights:
+  description: >
+    Write insights.md for Harbor & Vale's retention team based on the cleaning summary and
+    the EDA findings you received. Audience: managers, not data scientists.
+    Keep every finding's direction exactly as the EDA analyst stated it — never reverse it
+    to fit intuition, and make sure each recommended action follows from that direction.
+    These are associations, not proven causes: write "is associated with", not "causes".
+    Each row of the data is one customer, not one transaction.
+  expected_output: >
+    A markdown document (no code fences around it) with these sections:
+    "# Customer Churn — Business Insights", "## Headline", "## Who churns",
+    "## What drives churn", "## Recommended actions", "## Data notes".
+    Every claim must cite a figure from the analysis. Keep it under 500 words.
+  agent: business_analyst
+  context:
+    - ingest_and_clean
+    - explore_data
+
+review_insights:
+  description: >
+    Review the draft insights.md you received. First call read_eda_stats to get the
+    ground-truth statistics. Then check every sentence of the draft:
+    1. Every number must appear in the statistics (rounding is fine).
+    2. Every direction must match "churned_vs_stayed" and the segment churn rates.
+       Watch for inversely-phrased measures such as "days since last order" or distance:
+       a LOWER "days since last order" among churners means churners ordered MORE recently.
+    3. Every interpretation and every recommended action must follow from the correct
+       direction. Rewrite any that does not.
+    4. Flag-like columns (Complain) are shares, not counts: "53% of churners had complained",
+       not "0.53 complaints".
+    5. Counterintuitive findings must be stated as such, not explained away.
+  expected_output: >
+    The complete, corrected insights.md as markdown (no code fences around it), with the
+    same sections as the draft. Output only the document — no review notes.
+  agent: insights_reviewer
+  context:
+    - write_insights
+
+write_contract:
+  description: >
+    Call write_dataset_contract to publish the contract for the Data Scientist crew.
+    Provide:
+    - units: one {"column", "unit"} entry for every numeric column — e.g.
+      {"column": "Tenure", "unit": "months"}, {"column": "CashbackAmount", "unit": "USD"},
+      {"column": "DaySinceLastOrder", "unit": "days"},
+      {"column": "OrderAmountHikeFromlastYear", "unit": "percent"},
+      {"column": "WarehouseToHome", "unit": "km"}, {"column": "CouponUsed", "unit": "count"}.
+      Units go in this field, never only in the assumptions.
+    - assumptions the modelers must know, based on the cleaning summary: how duplicates and
+      missing values were handled and which category spellings were merged. (That one row
+      is one customer and what the target means are added automatically.)
+    If the tool returns an ERROR, read it, fix your input and call it again.
+  expected_output: >
+    The tool's confirmation that the contract was saved and validated, followed by the
+    list of assumptions you wrote.
+  agent: contract_author
+  context:
+    - ingest_and_clean

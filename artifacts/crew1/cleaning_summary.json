@@ -1,0 +1,99 @@
+{
+  "before": {
+    "rows": 5630,
+    "columns": 20,
+    "missing_by_column": {
+      "Tenure": 264,
+      "WarehouseToHome": 251,
+      "HourSpendOnApp": 255,
+      "OrderAmountHikeFromlastYear": 265,
+      "CouponUsed": 256,
+      "OrderCount": 258,
+      "DaySinceLastOrder": 307
+    },
+    "duplicate_rows_ignoring_id": 556,
+    "categorical_values": {
+      "PreferredLoginDevice": [
+        "Computer",
+        "Mobile Phone",
+        "Phone"
+      ],
+      "PreferredPaymentMode": [
+        "CC",
+        "COD",
+        "Cash on Delivery",
+        "Credit Card",
+        "Debit Card",
+        "E wallet",
+        "UPI"
+      ],
+      "Gender": [
+        "Female",
+        "Male"
+      ],
+      "PreferedOrderCat": [
+        "Fashion",
+        "Grocery",
+        "Laptop & Accessory",
+        "Mobile",
+        "Mobile Phone",
+        "Others"
+      ],
+      "MaritalStatus": [
+        "Divorced",
+        "Married",
+        "Single"
+      ]
+    }
+  },
+  "after": {
+    "rows": 5074,
+    "columns": 20,
+    "missing_by_column": {},
+    "duplicate_rows_ignoring_id": 3,
+    "categorical_values": {
+      "PreferredLoginDevice": [
+        "Computer",
+        "Mobile Phone"
+      ],
+      "PreferredPaymentMode": [
+        "Cash on Delivery",
+        "Credit Card",
+        "Debit Card",
+        "E wallet",
+        "UPI"
+      ],
+      "Gender": [
+        "Female",
+        "Male"
+      ],
+      "PreferedOrderCat": [
+        "Fashion",
+        "Grocery",
+        "Laptop & Accessory",
+        "Mobile Phone",
+        "Others"
+      ],
+      "MaritalStatus": [
+        "Divorced",
+        "Married",
+        "Single"
+      ]
+    }
+  },
+  "cleaning_log": [
+    "Dropped 556 duplicate rows (identical in every column except CustomerID).",
+    "PreferredLoginDevice: merged 1102 values ('Phone'\u2192'Mobile Phone').",
+    "PreferredPaymentMode: merged 570 values ('CC'\u2192'Credit Card', 'COD'\u2192'Cash on Delivery').",
+    "PreferedOrderCat: merged 726 values ('Mobile'\u2192'Mobile Phone').",
+    "Tenure: filled 231 missing values with the median (9).",
+    "WarehouseToHome: filled 221 missing values with the median (13).",
+    "HourSpendOnApp: filled 230 missing values with the median (3).",
+    "OrderAmountHikeFromlastYear: filled 252 missing values with the median (15).",
+    "CouponUsed: filled 210 missing values with the median (1).",
+    "OrderCount: filled 243 missing values with the median (2).",
+    "DaySinceLastOrder: filled 288 missing values with the median (3).",
+    "Cast 7 count columns to integer."
+  ],
+  "output": "/Users/guysadi/01_\u05e4\u05e8\u05d5\u05d9\u05d9\u05e7\u05d8\u05d9\u05dd/final-project/artifacts/crew1/clean_data.csv"
+}
