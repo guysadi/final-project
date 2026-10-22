@@ -154,3 +154,32 @@ def test_crew_wiring(monkeypatch):
     assert [t.agent.role.strip() for t in crew.tasks] == [
         "Data Engineer", "Exploratory Data Analyst", "Business Insights Analyst",
         "Insights Reviewer", "Dataset Contract Author"]
+
+
+def test_agent_assumptions_cannot_restate_or_contradict_base_facts(raw):
+    df, _ = clean(raw)
+    contract = build_contract(df, assumptions=[
+        "One row represents one customer.",
+        "Each row represents a unique customer transaction.",
+        "Churn is the target variable, 1 = churned.",
+        "556 duplicate rows were removed.",
+        "556 duplicate rows were removed.",
+    ])
+    assert contract["assumptions"] == [
+        "One row per customer; CustomerID is unique.",
+        "Churn is the target: 1 = customer churned, 0 = customer stayed.",
+        "556 duplicate rows were removed.",
+    ]
+
+
+def test_flag_columns_have_no_mean_by_churn():
+    """Regression: an agent reported "churners had 0.53 complaints" from the mean of a 0/1 flag."""
+    df = pd.DataFrame({
+        "CustomerID": range(20),
+        "Churn": [1] * 10 + [0] * 10,
+        "Tenure": range(20),
+        "Complain": [1, 0] * 10,
+    })
+    stats = compute_stats(df)
+    assert "Complain" not in stats["mean_by_churn"]
+    assert "Complain" in stats["churn_rate_by_segment"]

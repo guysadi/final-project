@@ -27,7 +27,10 @@ def compute_stats(df: pd.DataFrame) -> dict:
 
     churn_rate = float(df[TARGET].mean())
     corr = df[numeric + [TARGET]].corr()[TARGET].drop(TARGET).sort_values(key=abs, ascending=False)
-    means_by_churn = df.groupby(TARGET)[numeric].mean().T.rename(columns={0: "stayed", 1: "churned"})
+    # Means only for continuous measures. A mean of a flag, tier or score reads as nonsense
+    # ("churners had 0.53 complaints") and churn_rate_by_segment already covers those columns.
+    continuous = [c for c in numeric if c not in segments]
+    means_by_churn = df.groupby(TARGET)[continuous].mean().T.rename(columns={0: "stayed", 1: "churned"})
 
     return {
         "rows": len(df),
@@ -37,13 +40,11 @@ def compute_stats(df: pd.DataFrame) -> dict:
         "correlation_with_churn": corr.round(3).to_dict(),
         "mean_by_churn": means_by_churn.round(2).to_dict(orient="index"),
         # Spelled out so an LLM reading the stats cannot flip the direction of a finding.
-        # Segment columns (flags, tiers, scores) are left out: their means read as nonsense
-        # ("0.53 complaints") and churn_rate_by_segment already covers them.
         "churned_vs_stayed": [
             f"{col}: churned customers average {row.churned:g} vs {row.stayed:g} for those who "
             f"stayed — {'HIGHER' if row.churned > row.stayed else 'LOWER'} among churners"
             for col, row in means_by_churn.round(2).iterrows()
-            if row.churned != row.stayed and col not in segments
+            if row.churned != row.stayed
         ],
         "churn_rate_by_segment": {
             col: df.groupby(col)[TARGET].agg(["mean", "size"]).round(4)

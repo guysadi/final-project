@@ -154,33 +154,13 @@
       "stayed": 11.4,
       "churned": 3.91
     },
-    "CityTier": {
-      "stayed": 1.62,
-      "churned": 1.86
-    },
     "WarehouseToHome": {
       "stayed": 15.19,
       "churned": 16.65
     },
-    "HourSpendOnApp": {
-      "stayed": 2.93,
-      "churned": 2.95
-    },
-    "NumberOfDeviceRegistered": {
-      "stayed": 3.63,
-      "churned": 3.96
-    },
-    "SatisfactionScore": {
-      "stayed": 2.97,
-      "churned": 3.34
-    },
     "NumberOfAddress": {
       "stayed": 4.13,
       "churned": 4.5
-    },
-    "Complain": {
-      "stayed": 0.23,
-      "churned": 0.53
     },
     "OrderAmountHikeFromlastYear": {
       "stayed": 15.71,

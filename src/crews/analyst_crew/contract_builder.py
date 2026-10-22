@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -79,8 +80,24 @@ def build_contract(df: pd.DataFrame, descriptions: dict[str, str] | None = None,
         # Allow the row count to shrink by 20% on a refresh before the gate objects.
         "min_rows": int(len(df) * 0.8),
         "columns": columns,
-        "assumptions": BASE_ASSUMPTIONS + (assumptions or []),
+        "assumptions": BASE_ASSUMPTIONS + _without_base_facts(assumptions or []),
     }
+
+
+# Agent statements about row granularity or the target restate BASE_ASSUMPTIONS (and
+# could contradict them, e.g. "each row is a transaction"), so code has the final word.
+_BASE_FACT = re.compile(rf"\b(one|each|every) row\b|\brow represents\b|\b{TARGET}\b.*\btarget\b",
+                        re.IGNORECASE)
+
+
+def _without_base_facts(assumptions: list[str]) -> list[str]:
+    seen, kept = set(), []
+    for a in assumptions:
+        key = a.strip().lower()
+        if a.strip() and not _BASE_FACT.search(a) and key not in seen:
+            seen.add(key)
+            kept.append(a.strip())
+    return kept
 
 
 def columns_requiring_units(df: pd.DataFrame) -> list[str]:
