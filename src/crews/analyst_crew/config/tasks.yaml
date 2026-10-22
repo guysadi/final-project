@@ -30,6 +30,8 @@ write_insights:
     to fit intuition, and make sure each recommended action follows from that direction.
     These are associations, not proven causes: write "is associated with", not "causes".
     Each row of the data is one customer, not one transaction.
+    Write rates as percentages with one decimal (31.3%, not 0.3131) and give units for
+    averages (3.9 months, 3.3 days, 161.78 USD).
   expected_output: >
     A markdown document (no code fences around it) with these sections:
     "# Customer Churn — Business Insights", "## Headline", "## Who churns",
@@ -53,6 +55,7 @@ review_insights:
     4. Flag-like columns (Complain) are shares, not counts: "53% of churners had complained",
        not "0.53 complaints".
     5. Counterintuitive findings must be stated as such, not explained away.
+    6. Rates are percentages with one decimal (31.3%, not 0.3131); averages carry units.
   expected_output: >
     The complete, corrected insights.md as markdown (no code fences around it), with the
     same sections as the draft. Output only the document — no review notes.
