@@ -19,6 +19,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src import paths  # noqa: E402
+from src.break_scenarios import SCENARIOS as BREAKS  # noqa: E402
 
 BACKUP_DIR = paths.ROOT / ".break_backup"
 TARGETS = [paths.CLEAN_DATA, paths.CONTRACT]
@@ -32,46 +33,15 @@ def _backup() -> None:
         shutil.copy2(p, BACKUP_DIR / p.name)
 
 
-def _edit_data(fn) -> None:
+def _apply(scenario) -> None:
     df = pd.read_csv(paths.CLEAN_DATA)
-    fn(df).to_csv(paths.CLEAN_DATA, index=False)
-
-
-def _edit_contract(fn) -> None:
     contract = json.loads(paths.CONTRACT.read_text())
-    fn(contract)
+    df, contract = scenario.apply(df, contract)
+    df.to_csv(paths.CLEAN_DATA, index=False)
     paths.CONTRACT.write_text(json.dumps(contract, indent=2))
 
 
-def unit_change():
-    """CashbackAmount silently converted from dollars to cents."""
-    _edit_data(lambda df: df.assign(CashbackAmount=(df["CashbackAmount"] * 100).round(2)))
-
-
-def rename_column():
-    """Tenure renamed to match a 'new naming convention'."""
-    _edit_data(lambda df: df.rename(columns={"Tenure": "tenure_months"}))
-
-
-def drop_contract_column():
-    """A row deleted from the contract: data has a column the contract no longer describes."""
-    _edit_contract(lambda c: c["columns"].pop("CouponUsed"))
-
-
-def bad_category():
-    """Someone abbreviates a category value."""
-    _edit_data(lambda df: df.assign(Gender=df["Gender"].replace({"Female": "F"})))
-
-
-def remove_feature_source():
-    """OrderCount dropped from both data and contract. They still agree, so Gate 1 passes —
-    but the model needs OrderCount, so Gate 2 stops the Flow before modeling."""
-    _edit_data(lambda df: df.drop(columns="OrderCount"))
-    _edit_contract(lambda c: c["columns"].pop("OrderCount"))
-
-
-SCENARIOS = {f.__name__: f for f in
-             (unit_change, rename_column, drop_contract_column, bad_category, remove_feature_source)}
+SCENARIOS = {name: (lambda s=s: _apply(s)) for name, s in BREAKS.items()}
 
 
 def restore() -> None:
@@ -93,7 +63,7 @@ def main() -> None:
         return
     _backup()
     SCENARIOS[name]()
-    print(f"Broke the handoff: {name} — {SCENARIOS[name].__doc__.strip()}")
+    print(f"Broke the handoff: {name} — {BREAKS[name].description}")
     print("Now run:  python -m src.flow --skip-crew1")
     print("Undo with: python scripts/break_handoff.py restore")
 
