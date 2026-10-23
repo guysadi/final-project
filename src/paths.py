@@ -18,3 +18,12 @@ EDA_STATS = CREW1_DIR / "eda_stats.json"
 CREW1_ARTIFACTS = [CLEAN_DATA, EDA_REPORT, INSIGHTS, CONTRACT]
 
 CREW2_DIR = ROOT / "artifacts" / "crew2"
+FEATURES = CREW2_DIR / "features.csv"
+MODEL = CREW2_DIR / "model.joblib"
+EVAL_REPORT = CREW2_DIR / "evaluation_report.md"
+MODEL_CARD = CREW2_DIR / "model_card.md"
+# Supporting files the agents read; not part of the required outputs.
+FEATURE_SPEC = CREW2_DIR / "feature_spec.json"
+METRICS = CREW2_DIR / "metrics.json"
+
+CREW2_ARTIFACTS = [FEATURES, MODEL, EVAL_REPORT, MODEL_CARD]
