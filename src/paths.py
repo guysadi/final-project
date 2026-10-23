@@ -27,3 +27,6 @@ FEATURE_SPEC = CREW2_DIR / "feature_spec.json"
 METRICS = CREW2_DIR / "metrics.json"
 
 CREW2_ARTIFACTS = [FEATURES, MODEL, EVAL_REPORT, MODEL_CARD]
+
+# Written by the Flow after every run, pass or fail.
+RUN_SUMMARY = ROOT / "artifacts" / "run_summary.json"

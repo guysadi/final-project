@@ -2,121 +2,150 @@
 
 ## Model details
 
-- Model name: customer churn ranker
-- Selected model: random forest
+- Model task: binary churn prediction for customer retention outreach
+- Selected model: random_forest
 - Selection rule: highest 5-fold cross-validated ROC-AUC on the training set
 - Decision threshold: 0.5
 - Contract version: 1.0
-- Seed: 42
-- Primary key: CustomerID
-- Target: Churn, where 1 = customer churned and 0 = customer stayed
-- Number of features: 26
-- Train rows: 4059
+- Random seed: 42
+- Total features: 26
+- Training rows: 4059
 - Test rows: 1015
-- Train churn rate: 16.6%
+- Training churn rate: 16.6%
 - Test churn rate: 16.6%
+
+The model uses customer activity, satisfaction, order, and payment-related features. Gender and MaritalStatus were excluded from the feature set.
 
 ## Intended use
 
-This model is intended to rank customers for retention outreach. It is meant to help prioritize who should receive outreach, not to make fully automated decisions about customers.
+This model is intended to rank customers for retention outreach.
 
-Out of scope uses include:
-- approving or denying customer service
-- setting prices, discounts, or credit terms
-- making employment, housing, insurance, or other high-stakes decisions
-- using the model outside the dataset contract and feature pipeline described here
-- using the model without applying the same feature engineering and contract checks used during training
+Appropriate uses:
+- Prioritizing customers for outreach, offers, or intervention
+- Ranking customers by churn risk for operational follow-up
+- Supporting retention campaign planning
+
+Out-of-scope uses:
+- Hiring, lending, insurance, housing, or other decisions unrelated to retention
+- Any use as a sole basis for automated adverse action
+- Any use that treats the score as a causal explanation of churn
+- Any use outside the dataset contract and feature engineering pipeline
 
 ## Training data
 
-The model was trained and evaluated under contract version 1.0.
+The model was trained under contract version 1.0.
 
-Dataset contract assumptions:
+Contract assumptions:
 - One row per customer; CustomerID is unique.
 - Churn is the target: 1 = customer churned, 0 = customer stayed.
-- All duplicate rows were removed from the dataset, totaling 556 duplicates dropped.
-- Missing values were filled with the median for the following columns: Tenure (9 months), WarehouseToHome (13 km), HourSpendOnApp (3 hours), OrderAmountHikeFromlastYear (15 percent), CouponUsed (1 count), OrderCount (2 count), and DaySinceLastOrder (3 days).
-- Inconsistent category spellings were standardized: Phone was merged to Mobile Phone, CC to Credit Card, COD to Cash on Delivery, and Mobile to Mobile Phone.
+- Missing numeric values were filled with the median of the respective column.
+- 556 duplicate rows were removed during cleaning.
+- Inconsistent category spellings were merged: Phone was changed to Mobile Phone, CC was changed to Credit Card, and COD was changed to Cash on Delivery.
 
-The model uses these feature groups:
-- Numeric columns: Tenure, CityTier, WarehouseToHome, HourSpendOnApp, NumberOfDeviceRegistered, SatisfactionScore, NumberOfAddress, Complain, OrderAmountHikeFromlastYear, CouponUsed, OrderCount, DaySinceLastOrder, CashbackAmount
+Feature set:
+- Numeric columns used: Tenure, CityTier, WarehouseToHome, HourSpendOnApp, NumberOfDeviceRegistered, SatisfactionScore, NumberOfAddress, Complain, OrderAmountHikeFromlastYear, CouponUsed, OrderCount, DaySinceLastOrder, CashbackAmount
 - One-hot encoded text columns: PreferredLoginDevice, PreferredPaymentMode, PreferedOrderCat
-- Engineered features: is_new_customer, cashback_per_order, coupons_per_order, days_since_order_per_tenure
+- Engineered features:
+  - is_new_customer: 1 if Tenure <= 1 month
+  - cashback_per_order: CashbackAmount / OrderCount, with OrderCount floored at 1
+  - coupons_per_order: CouponUsed / OrderCount, with OrderCount floored at 1
+  - days_since_order_per_tenure: DaySinceLastOrder / (Tenure + 1)
 
-Sensitive columns were excluded from the model:
-- Gender
-- MaritalStatus
-
-One engineered feature deserves special note:
-- is_new_customer is 1 if Tenure <= 1 month, and churn is about 51% in this group versus less than 10% after that point.
+Validation passed with 71 contract checks and 0 violations.
 
 ## Evaluation
 
-The selected random forest performed as follows on the test set:
-- ROC-AUC: 98.0%
-- PR-AUC: 92.6%
-- Precision: 75.9%
-- Recall: 91.7%
-- F1: 83.0%
+The selected model is random_forest because it had the highest 5-fold cross-validated ROC-AUC on the training set.
 
-For context, the other models were:
-- Logistic regression: ROC-AUC 89.0%, PR-AUC 68.3%, precision 47.8%, recall 83.3%, F1 60.7%
-- Gradient boosting: ROC-AUC 98.5%, PR-AUC 95.2%, precision 80.9%, recall 93.5%, F1 86.7%
+Model comparison on the held-out test set:
 
-The random forest was selected because it had the highest 5-fold cross-validated ROC-AUC on the training set:
-- Random forest: 95.96%
-- Gradient boosting: 95.90%
-- Logistic regression: 89.38%
+- logistic_regression
+  - CV ROC-AUC: 89.4% ± 1.5%
+  - ROC-AUC: 89.0%
+  - PR-AUC: 68.3%
+  - Precision: 47.8%
+  - Recall: 83.3%
+  - F1: 60.7%
+- random_forest
+  - CV ROC-AUC: 96.0% ± 0.7%
+  - ROC-AUC: 98.0%
+  - PR-AUC: 92.6%
+  - Precision: 75.9%
+  - Recall: 91.7%
+  - F1: 83.0%
+- gradient_boosting
+  - CV ROC-AUC: 95.9% ± 1.2%
+  - ROC-AUC: 98.5%
+  - PR-AUC: 95.2%
+  - Precision: 80.9%
+  - Recall: 93.5%
+  - F1: 86.7%
 
-Interpretation for retention use:
-- Precision tells you, among customers flagged for outreach, how many actually churned.
-- Recall tells you, among customers who actually churned, how many were flagged.
+Top permutation importance features:
+- Complain: 4.5%
+- Tenure: 2.6%
+- NumberOfAddress: 2.5%
+- is_new_customer: 1.8%
+- SatisfactionScore: 1.5%
+- CashbackAmount: 1.3%
+- cashback_per_order: 1.1%
+- CityTier: 1.0%
+- days_since_order_per_tenure: 1.0%
+- WarehouseToHome: 1.0%
 
-At the operating point used here, the model catches most churners while also limiting wasted outreach.
-
-The top features by permutation importance were:
-- Complain: 4.48%
-- Tenure: 2.61%
-- NumberOfAddress: 2.51%
-- is_new_customer: 1.78%
-- SatisfactionScore: 1.52%
-- CashbackAmount: 1.34%
-- cashback_per_order: 1.08%
-- CityTier: 1.04%
-- days_since_order_per_tenure: 1.02%
-- WarehouseToHome: 0.95%
-
-Permutation importance shows which features matter most to prediction, but it does not show direction. It does not tell you whether a feature increases or decreases churn risk.
+Important note: importance does not show direction. A feature with high importance may matter a lot to the model, but this does not tell us whether higher values increase or decrease churn risk.
 
 ## Limitations
 
-- There was mild leakage from Crew 1’s median imputation on the full dataset before the train/test split. This means some test-set information influenced preprocessing. The reported performance may therefore be slightly optimistic.
-- The model was evaluated at a fixed threshold of 0.5. Different thresholds would change precision and recall.
-- Importance values do not show direction, so they should not be interpreted as causal effects or as evidence that a feature increases or decreases churn.
-- High test performance should still be interpreted cautiously because of the preprocessing leak.
-- The model is only as valid as the contract it was trained under; new data must satisfy the same contract and feature pipeline.
+There is mild leakage in the preprocessing pipeline: Crew 1 filled missing numeric values with medians computed on the full dataset before the train/test split. That means the test distribution influenced preprocessing. This is a mild leak, not a catastrophic one, but it can make reported performance slightly optimistic.
+
+Other limitations:
+- The model is evaluated on one fixed train/test split; results may vary on new data.
+- Very strong test metrics may not fully transfer to production data.
+- Permutation importance does not tell us the direction of effects.
+- The model can only learn patterns present in the training data and the contract-defined features.
+- Excluding sensitive columns does not guarantee fairness.
 
 ## Ethical considerations
 
-Gender and MaritalStatus were excluded from the features. Excluding a column does not guarantee fairness.
+Gender and MaritalStatus were excluded from the features. That reduces direct use of those columns, but it does not guarantee fairness.
 
-Fairness-by-group results for Gender:
-- Female: 404 customers, actual churn rate 18.6%, flagged rate 22.8%, recall 85.3%
-- Male: 611 customers, actual churn rate 15.2%, flagged rate 18.2%, recall 96.8%
+Fairness by group, reported as actual churn rate, flagged rate, and recall:
 
-Fairness-by-group results for MaritalStatus:
-- Divorced: 157 customers, actual churn rate 17.2%, flagged rate 20.4%, recall 96.3%
-- Married: 540 customers, actual churn rate 11.5%, flagged rate 16.9%, recall 95.2%
-- Single: 318 customers, actual churn rate 24.8%, flagged rate 25.2%, recall 87.3%
+Gender:
+- Female
+  - Customers: 404
+  - Actual churn rate: 18.6%
+  - Flagged rate: 22.8%
+  - Recall: 85.3%
+- Male
+  - Customers: 611
+  - Actual churn rate: 15.2%
+  - Flagged rate: 18.2%
+  - Recall: 96.8%
 
-Plainly, the model serves some groups worse:
-- For Gender, recall is worse for Female than for Male, and the flagged rate is also higher for Female.
-- For MaritalStatus, recall is worse for Single than for Divorced or Married.
-- The highest actual churn rate is among Single customers, but the model still recalls that group worse than the other marital-status groups.
+MaritalStatus:
+- Divorced
+  - Customers: 157
+  - Actual churn rate: 17.2%
+  - Flagged rate: 20.4%
+  - Recall: 96.3%
+- Married
+  - Customers: 540
+  - Actual churn rate: 11.5%
+  - Flagged rate: 16.9%
+  - Recall: 95.2%
+- Single
+  - Customers: 318
+  - Actual churn rate: 24.8%
+  - Flagged rate: 25.2%
+  - Recall: 87.3%
 
-These are findings from the evaluation, not explanations. They show that removing Gender and MaritalStatus from the feature set did not eliminate performance differences across those groups.
+Plainly, the model serves Single customers worse on recall than Divorced or Married customers. It also has lower recall for Female customers than Male customers. These differences should be monitored before deployment and during use.
 
 ## How to use
+
+The saved bundle can be loaded as follows:
 
 ```python
 import joblib
@@ -128,7 +157,7 @@ threshold = bundle["threshold"]
 contract_version = bundle["contract_version"]
 ```
 
-New data must pass the dataset contract gate and go through the same feature engineering first. In particular, it must satisfy the contract version 1.0 assumptions, and it must be transformed to the same 26-feature schema before scoring.
+New data must pass the dataset contract gate and go through the same feature engineering first. After that, score the model using the saved feature list and apply the threshold to convert probabilities into flagged customers.
 
 ## Appendix — metrics (generated from metrics.json)
 

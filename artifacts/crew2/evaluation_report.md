@@ -2,174 +2,162 @@
 
 ## Summary
 
-We trained and compared three churn models on Harbor & Vale’s data using the same feature set, the same train/test split, and the same decision threshold of 0.5. The model was selected by the highest 5-fold cross-validated ROC-AUC on the training set, not by test performance.
+We compared three churn model variations using the same feature set and the same fixed split. The model was selected by the highest 5-fold cross-validated ROC-AUC on the training set, not by test performance.
 
-The selected model is the random forest, with a cross-validated ROC-AUC of 0.9596 and a test ROC-AUC of 0.9802. On the test set, it achieved PR-AUC of 0.9259, precision of 0.7586, recall of 0.9167, and F1 of 0.8302.
+By that rule, the selected model is **random_forest** with a training CV ROC-AUC of **0.9596**. The **gradient_boosting** model was very close at **0.9590**, and **logistic_regression** trailed at **0.8938**.
 
-The gradient boosting model scored slightly higher on the test set than the random forest on every reported test metric except precision, but it was not selected because model choice must be based on cross-validation on the training data, not on the test set. That is the right rule because the test set is supposed to remain an unbiased final check. If we choose a model because it looks best on test, we leak test information into model selection and overstate how well the process will generalize.
+On the held-out test set, the strongest overall discrimination and classification metrics were actually achieved by **gradient_boosting**:
+- ROC-AUC: **0.9853**
+- PR-AUC: **0.9522**
+- Precision: **0.8093**
+- Recall: **0.9345**
+- F1: **0.8674**
+
+However, the selected model remains **random_forest** because test results are not allowed to influence model choice. That keeps the evaluation honest and avoids tuning to the test set, even if another model looks better there.
 
 ## Setup
 
-The evaluation used 26 features.
+The dataset was split into:
+- Train: **4059** rows
+- Test: **1015** rows
 
-Numeric features included:
-- Tenure
-- CityTier
-- WarehouseToHome
-- HourSpendOnApp
-- NumberOfDeviceRegistered
-- SatisfactionScore
-- NumberOfAddress
-- Complain
-- OrderAmountHikeFromlastYear
-- CouponUsed
-- OrderCount
-- DaySinceLastOrder
-- CashbackAmount
+The churn rate was very similar across splits:
+- Train churn rate: **16.6%**
+- Test churn rate: **16.6%**
 
-Text features were one-hot encoded:
-- PreferredLoginDevice
-- PreferredPaymentMode
-- PreferedOrderCat
+The feature set used **26** features. Sensitive columns **Gender** and **MaritalStatus** were excluded from training, and fairness was checked afterward by those groups.
 
-Engineered features:
-- is_new_customer
-- cashback_per_order
-- coupons_per_order
-- days_since_order_per_tenure
+Selection rule:
+- Pick the model with the highest **5-fold cross-validated ROC-AUC on the training set**
+- Do **not** use the test set to choose the model
 
-Sensitive columns were excluded from modeling:
-- Gender
-- MaritalStatus
+Why this matters:
+- The test set is meant to be a final, untouched check on generalization.
+- If we choose based on test results, we leak evaluation information into model selection and make the test score overly optimistic.
+- Even if a model scores higher on test, that does not justify selecting it after the fact.
 
-Train/test sizes were 4059 and 1015 rows, respectively. The churn rate was 0.1658 in training and 0.1655 in test, so the split looks well balanced on outcome prevalence.
-
-One important caveat in the pipeline: Crew 1 filled missing values with medians computed on the full dataset before the train/test split. That introduces a mild leak of test information into training. It is not as severe as using the target directly, but it can make results look a bit better than a fully clean pipeline would.
+One caveat in the pipeline is worth stating plainly: **Crew 1 filled missing values with medians computed on the full dataset before the train/test split**. That is a mild form of leakage because information from the test distribution influences preprocessing. It is not a catastrophic leak, but it can make results a little better than a strictly leak-free pipeline.
 
 ## Model comparison
 
 ### Logistic regression
-- Cross-validated ROC-AUC: 0.8938
-- Cross-validated ROC-AUC std: 0.0149
-- Test ROC-AUC: 0.8901
-- Test PR-AUC: 0.6831
-- Test precision: 0.4778
-- Test recall: 0.8333
-- Test F1: 0.6074
+- CV ROC-AUC: **0.8938** ± **0.0149**
+- Test ROC-AUC: **0.8901**
+- Test PR-AUC: **0.6831**
+- Precision: **0.4778**
+- Recall: **0.8333**
+- F1: **0.6074**
 
-This model is clearly the weakest of the three. It still captures many churners, but precision is low, which means many of the customers it flags would not churn.
+This model is clearly the weakest of the three. It still catches many churners, but it produces a lot of false positives relative to the other models.
 
 ### Random forest
-- Cross-validated ROC-AUC: 0.9596
-- Cross-validated ROC-AUC std: 0.007
-- Test ROC-AUC: 0.9802
-- Test PR-AUC: 0.9259
-- Test precision: 0.7586
-- Test recall: 0.9167
-- Test F1: 0.8302
+- CV ROC-AUC: **0.9596** ± **0.0070**
+- Test ROC-AUC: **0.9802**
+- Test PR-AUC: **0.9259**
+- Precision: **0.7586**
+- Recall: **0.9167**
+- F1: **0.8302**
 
-This is the selected model because it had the highest 5-fold cross-validated ROC-AUC on the training set. Its cross-validation score is slightly above gradient boosting’s. On test, it performs very strongly, but we should not use that test result to justify selection.
+This was the selected model because it had the best cross-validated ROC-AUC on the training set. It also generalized well on the test set.
 
 ### Gradient boosting
-- Cross-validated ROC-AUC: 0.959
-- Cross-validated ROC-AUC std: 0.0124
-- Test ROC-AUC: 0.9853
-- Test PR-AUC: 0.9522
-- Test precision: 0.8093
-- Test recall: 0.9345
-- Test F1: 0.8674
+- CV ROC-AUC: **0.9590** ± **0.0124**
+- Test ROC-AUC: **0.9853**
+- Test PR-AUC: **0.9522**
+- Precision: **0.8093**
+- Recall: **0.9345**
+- F1: **0.8674**
 
-This model is the strongest on the held-out test set by the reported metrics. However, it was not selected because selection must happen using cross-validation on the training set only. The fact that it edges out the random forest on test could be real, or it could be noise. Since the difference in cross-validated ROC-AUC is tiny, we should treat these two as very close competitors rather than claiming a clear winner from the test set.
+This model achieved the strongest test metrics across the board. But because the test set is not used for selection, it remains a comparison point rather than the chosen model.
 
-### What the classification metrics mean here
+### How to read precision and recall for a retention campaign
 
-Precision answers: among customers we flag for retention outreach, how many actually churned?
+- **Precision** answers: of the customers we flagged for retention, how many actually churned?
+  - Higher precision means fewer wasted offers, coupons, or outreach contacts.
+  - Lower precision means more retention spend goes to customers who would not have churned.
 
-- High precision means fewer wasted offers, fewer unnecessary discounts, and lower campaign cost per saved churner.
-- Low precision means more offers go to customers who would have stayed anyway.
+- **Recall** answers: of the customers who actually churned, how many did we catch?
+  - Higher recall means fewer missed churners.
+  - Lower recall means more at-risk customers slip through without intervention.
 
-Recall answers: among customers who actually churned, how many did we catch?
+For example:
+- **logistic_regression** has precision **0.4778** and recall **0.8333**. That means it finds many churners, but nearly half of the flagged customers are false positives.
+- **random_forest** improves precision to **0.7586** while keeping recall at **0.9167**, a much better tradeoff.
+- **gradient_boosting** is best on both, with precision **0.8093** and recall **0.9345**.
 
-- High recall means fewer missed churners.
-- Low recall means more churners slip through untreated.
-
-For a retention campaign, the tradeoff is practical:
-- Precision is about avoiding waste.
-- Recall is about avoiding missed churners.
-
-The selected random forest gives a good balance: precision of 0.7586 and recall of 0.9167. That means it catches most churners while keeping false positives reasonably controlled. If retention offers are expensive, precision matters more. If losing a churner is very costly, recall matters more. The best operating point may differ from the default threshold of 0.5, but threshold tuning was not part of model selection here.
+The confusion matrices tell the same story:
+- logistic_regression: **153** false positives, **28** false negatives
+- random_forest: **49** false positives, **14** false negatives
+- gradient_boosting: **37** false positives, **11** false negatives
 
 ## Selected model
 
-The selected model is the random forest.
+The selected model is **random_forest**.
 
 Why it was selected:
-- It had the highest 5-fold cross-validated ROC-AUC on the training set: 0.9596.
-- Its cross-validation standard deviation was 0.007, which is fairly tight and suggests stable performance across folds.
-- We did not use the test set to choose between models, even though gradient boosting scored slightly higher on test.
+- It had the highest 5-fold cross-validated ROC-AUC on the training set: **0.9596**
+- That is the agreed selection criterion
+- Its CV result was also stable, with standard deviation **0.0070**, which is reassuring
 
-Test performance of the selected model:
-- ROC-AUC: 0.9802
-- PR-AUC: 0.9259
-- Precision: 0.7586
-- Recall: 0.9167
-- F1: 0.8302
-
-That is a strong result, but it should still be interpreted cautiously because of the median imputation leak noted above.
+Why not gradient_boosting, despite its stronger test metrics:
+- Because the test set must not be used to pick the winner
+- The difference in test performance may be real, but it may also reflect normal variance, the particular split, or mild leakage effects elsewhere in the pipeline
+- The correct choice is still the model that won the training cross-validation contest
 
 ## What drives the predictions
 
-Permutation importance tells us which features matter most to the model’s performance, not whether they increase or decrease churn risk. Importance is about magnitude of influence, not direction. So we should not say, for example, that high Complain values “increase churn” based on this list alone.
+The top features by permutation importance were:
 
-Top features by permutation importance:
-- Complain: 0.0448
-- Tenure: 0.0261
-- NumberOfAddress: 0.0251
-- is_new_customer: 0.0178
-- SatisfactionScore: 0.0152
-- CashbackAmount: 0.0134
-- cashback_per_order: 0.0108
-- CityTier: 0.0104
-- days_since_order_per_tenure: 0.0102
-- WarehouseToHome: 0.0095
+1. **Complain**: **0.0448**
+2. **Tenure**: **0.0261**
+3. **NumberOfAddress**: **0.0251**
+4. **is_new_customer**: **0.0178**
+5. **SatisfactionScore**: **0.0152**
+6. **CashbackAmount**: **0.0134**
+7. **cashback_per_order**: **0.0108**
+8. **CityTier**: **0.0104**
+9. **days_since_order_per_tenure**: **0.0102**
+10. **WarehouseToHome**: **0.0095**
 
-A few notes:
-- Complain is the most important feature by a clear margin, so complaint behavior is one of the strongest signals the model uses.
-- Tenure and is_new_customer both rank highly, which indicates customer age and especially very early tenure are important for prediction.
-- NumberOfAddress and WarehouseToHome suggest customer profile and logistics-related signals matter.
-- SatisfactionScore also appears important, which is consistent with churn being tied to customer experience.
-- CashbackAmount and cashback_per_order show that incentive-related behavior matters to the model.
-- days_since_order_per_tenure indicates recency relative to customer age contributes useful information.
+Important interpretation note:
+- Permutation importance tells us **how much a feature matters** to the model’s predictions.
+- It does **not** tell us the **direction** of the effect.
+- We should not claim that a feature “increases churn” or “reduces churn” based on importance alone.
 
-Again, these importances do not tell us the direction of effect, only the amount of predictive contribution.
+What this suggests at a high level:
+- Customer complaint behavior is the strongest signal in the model.
+- Tenure and new-customer status matter substantially, which is consistent with early-life churn risk.
+- Order and delivery-related context, satisfaction, and cashback-related variables also contribute meaningfully.
 
 ## Caveats
 
-Several reasons to be cautious:
+A few points should keep us grounded:
 
-1. The test scores are very high.
-   - Random forest and gradient boosting both produce extremely strong ROC-AUC and PR-AUC values.
-   - That may reflect genuinely strong signal in the features, but it can also be amplified by the mild preprocessing leak from median imputation on the full dataset.
+1. **The test scores are unusually strong**
+   - ROC-AUC of **0.9802** for random forest and **0.9853** for gradient boosting are very high.
+   - That can happen when the signal is genuinely strong, but it can also be inflated by dataset structure, overlap in customer behavior patterns, or leakage.
+   - One known source of leakage here is the median imputation performed on the full dataset before splitting.
 
-2. The gap between the top two models is small in cross-validation.
-   - Random forest: 0.9596
-   - Gradient boosting: 0.959
-   - The difference is tiny, so the choice is defensible but not dramatic.
+2. **The selected model is not the best on every metric**
+   - Random forest won on cross-validated ROC-AUC, but gradient boosting was better on the test set for ROC-AUC, PR-AUC, precision, recall, and F1.
+   - That does not change the selection rule, but it does mean the “best” model depends on whether you mean “best by the pre-declared selection criterion” or “best on the held-out test split.”
 
-3. Importance is not causality.
-   - The top features show what the model uses, not what causes churn.
-   - We should not infer business direction from permutation importance alone.
+3. **Importance is not causality**
+   - A high permutation importance score does not mean a feature causes churn.
+   - It only means the model relies on that feature when making predictions.
 
-4. Fairness results should be read carefully.
-   - The model does not use Gender or MaritalStatus as features, but performance and flagging rates still differ across those groups.
-   - For Gender, actual churn rate is 0.1856 for Female and 0.1522 for Male; flagged rate is 0.2277 for Female and 0.1817 for Male; recall is 0.8533 for Female and 0.9677 for Male.
-   - For MaritalStatus, actual churn rate is 0.172 for Divorced, 0.1148 for Married, and 0.2484 for Single; flagged rate is 0.2038, 0.1685, and 0.2516, respectively; recall is 0.963 for Divorced, 0.9516 for Married, and 0.8734 for Single.
+4. **Fairness metrics show different behaviors by group**
+   - For **Gender**:
+     - Female: customers **404**, actual churn rate **18.6%**, flagged rate **22.8%**, recall **85.3%**
+     - Male: customers **611**, actual churn rate **15.2%**, flagged rate **18.2%**, recall **96.8%**
+   - For **MaritalStatus**:
+     - Divorced: customers **157**, actual churn rate **17.2%**, flagged rate **20.4%**, recall **96.3%**
+     - Married: customers **540**, actual churn rate **11.5%**, flagged rate **16.9%**, recall **95.2%**
+     - Single: customers **318**, actual churn rate **24.8%**, flagged rate **25.2%**, recall **87.3%**
 
-5. Threshold choice matters.
-   - All reported precision, recall, and F1 values use a fixed decision threshold of 0.5.
-   - A different threshold could improve recall or precision depending on the business goal, but that would need a separate tuning step.
+   These numbers do not prove bias by themselves, but they do show that model behavior differs across groups and should be monitored before deployment.
 
-Overall, the random forest is the best model by the agreed selection rule, and it performs strongly on the holdout set. Still, the unusually strong scores and the preprocessing leak mean we should treat the reported performance as encouraging but not final.
+Overall, the project produced a strong churn classifier, and the selected **random_forest** model is defensible under the stated selection rule. At the same time, the unusually high test results and the preprocessing leakage mean we should treat the metrics as encouraging, not as proof that the model will perform identically in production.
 
 ## Appendix — metrics (generated from metrics.json)
 

@@ -12,9 +12,13 @@ data/raw/*
 !data/raw/.gitkeep
 
 # Run logs (the latest run summary is kept in artifacts/)
-logs/*.log
+logs/*
+!logs/.gitkeep
 
 # OS / editors
 .DS_Store
 .vscode/
 .idea/
+
+# Backup made by scripts/break_handoff.py
+.break_backup/
