@@ -54,6 +54,22 @@ python -m src.flow
 A full run takes about 80 seconds and ~40k tokens. Logs go to the console and to
 `logs/flow_<run id>.log`; the outcome of every stage is saved to `artifacts/run_summary.json`.
 
+## Demo app
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+Reads the committed artifacts — no API key, no tokens.
+
+| Tab | What it shows |
+|---|---|
+| **Pipeline** | Last Flow run stage by stage, artifact hashes, and a button that runs both gates live |
+| **Crew 1 · Data** | KPIs, business insights, the dataset contract as a table, the EDA report |
+| **Crew 2 · Model** | Model comparison, feature importance, fairness by group, evaluation report, model card |
+| **Score a customer** | A form built from the contract. Values are checked against it before scoring — enter a cashback of 30,000 and it refuses |
+| **Break it** | Pick a scenario; the gates run on a broken copy in memory and show where the Flow would stop |
+
 ## Break it on purpose
 
 ```bash
@@ -79,8 +95,8 @@ Other scenarios: `rename_column`, `drop_contract_column`, `bad_category`,
 python -m pytest
 ```
 
-55 tests, no API key needed: the contract gate, both crews' tools and wiring, every
-break scenario, and the Flow's routing.
+68 tests, no API key needed: the contract gate, both crews' tools and wiring, every
+break scenario, the Flow's routing, and a headless run of the app.
 
 ## Project layout
 
@@ -92,6 +108,8 @@ artifacts/run_summary.json   outcome of the latest Flow run
 src/validation/      the contract gate
 src/crews/           the two crews (agents.yaml, tasks.yaml, tools, deterministic code)
 src/flow.py          the Flow
-scripts/             data download, break-it scenarios
+src/break_scenarios.py   ways a handoff goes wrong (shared by the script and the app)
+app/                 Streamlit demo app
+scripts/             data download, break-it script
 tests/               pytest suite
 ```
