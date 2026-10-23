@@ -1,0 +1,65 @@
+validate_and_engineer:
+  description: >
+    1. Call validate_handoff. If it returns FAILED, stop: do not call any other tool and
+       report the violations exactly as given.
+    2. If it PASSED, call engineer_features.
+    Summarise the validation result and the feature set that was built.
+  expected_output: >
+    The validation result (PASSED/FAILED and number of checks), then the feature set:
+    numeric columns used, which text columns were one-hot encoded, each engineered
+    feature with its description, which sensitive columns were excluded and why, and
+    the total number of features.
+  agent: feature_engineer
+
+train_models:
+  description: >
+    Call train_and_compare_models, then write the evaluation report for Harbor & Vale's
+    data team based only on the metrics it returns.
+    - Explain the selection rule (cross-validated ROC-AUC on the training set) and why the
+      test set is not used to choose a model — even if another model scores higher on test.
+    - Compare the variations on ROC-AUC, PR-AUC, precision, recall and F1, and explain what
+      precision and recall mean for a retention campaign (wasted offers vs missed churners).
+    - Discuss the top features by permutation importance. Importance says how much a
+      feature matters, NOT in which direction — never claim or imply a direction from it.
+    - Be sceptical: if a score looks unusually high, say what could explain it. One known
+      cause in this pipeline: Crew 1 filled missing values with medians computed on the full
+      dataset before the train/test split, a mild leak of test information into training.
+    Quote every number exactly as in the metrics; rates as percentages with one decimal.
+    Do not include a metrics table — one is generated from metrics.json and appended.
+  expected_output: >
+    A markdown document (no code fences around it) with sections:
+    "# Model Evaluation Report", "## Summary", "## Setup", "## Model comparison",
+    "## Selected model", "## What drives the predictions", "## Caveats".
+  agent: ml_engineer
+  context:
+    - validate_and_engineer
+
+write_model_card:
+  description: >
+    Call read_model_summary and write model_card.md for the selected model, using only
+    the facts it returns.
+    - Intended use: ranking customers for retention outreach; out-of-scope uses.
+    - Training data: from the contract (version, row counts, cleaning assumptions).
+    - Ethical considerations: Gender and MaritalStatus were excluded from the features;
+      report the fairness_by_group numbers (recall and flagged rate per group) and state
+      plainly any group the model serves worse. Excluding a column does not guarantee
+      fairness — say so.
+    - Limitations must include the mild leakage from Crew 1's median imputation on the full
+      dataset before the train/test split, and that importance does not show direction.
+    - How to use: a short Python example — `bundle = joblib.load("artifacts/crew2/model.joblib")`
+      returns a dict with "model", "features", "threshold", "contract_version"; new data must
+      pass the dataset contract gate and go through the same feature engineering first.
+    Quote every number exactly. Every rate — churn rates, flagged rates, recall, precision —
+    is a percentage with one decimal (18.6%, not 0.1856). Write numbers as plain text —
+    never wrap values in quotes or backticks.
+    Do not include a metrics table — one is generated from metrics.json and appended.
+  expected_output: >
+    A markdown model card with sections (do not wrap the whole document in a code fence,
+    but do put the Python example in a ```python block):
+    "# Model Card — Customer Churn", "## Model details", "## Intended use",
+    "## Training data", "## Evaluation", "## Limitations", "## Ethical considerations",
+    "## How to use".
+  agent: model_card_author
+  context:
+    - validate_and_engineer
+    - train_models

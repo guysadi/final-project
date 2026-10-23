@@ -1,0 +1,90 @@
+{
+  "contract_version": "1.0",
+  "primary_key": "CustomerID",
+  "target": "Churn",
+  "features": [
+    "Tenure",
+    "CityTier",
+    "WarehouseToHome",
+    "HourSpendOnApp",
+    "NumberOfDeviceRegistered",
+    "SatisfactionScore",
+    "NumberOfAddress",
+    "Complain",
+    "OrderAmountHikeFromlastYear",
+    "CouponUsed",
+    "OrderCount",
+    "DaySinceLastOrder",
+    "CashbackAmount",
+    "PreferredLoginDevice_Mobile_Phone",
+    "PreferredPaymentMode_Credit_Card",
+    "PreferredPaymentMode_Debit_Card",
+    "PreferredPaymentMode_E_wallet",
+    "PreferredPaymentMode_UPI",
+    "PreferedOrderCat_Grocery",
+    "PreferedOrderCat_Laptop_and_Accessory",
+    "PreferedOrderCat_Mobile_Phone",
+    "PreferedOrderCat_Others",
+    "is_new_customer",
+    "cashback_per_order",
+    "coupons_per_order",
+    "days_since_order_per_tenure"
+  ],
+  "numeric_from_contract": [
+    "Tenure",
+    "CityTier",
+    "WarehouseToHome",
+    "HourSpendOnApp",
+    "NumberOfDeviceRegistered",
+    "SatisfactionScore",
+    "NumberOfAddress",
+    "Complain",
+    "OrderAmountHikeFromlastYear",
+    "CouponUsed",
+    "OrderCount",
+    "DaySinceLastOrder",
+    "CashbackAmount"
+  ],
+  "one_hot_encoded": [
+    "PreferredLoginDevice",
+    "PreferredPaymentMode",
+    "PreferedOrderCat"
+  ],
+  "engineered": [
+    {
+      "name": "is_new_customer",
+      "sources": [
+        "Tenure"
+      ],
+      "description": "1 if Tenure <= 1 month \u2014 churn is ~51% in this group vs <10% after"
+    },
+    {
+      "name": "cashback_per_order",
+      "sources": [
+        "CashbackAmount",
+        "OrderCount"
+      ],
+      "description": "CashbackAmount / OrderCount (OrderCount floored at 1)"
+    },
+    {
+      "name": "coupons_per_order",
+      "sources": [
+        "CouponUsed",
+        "OrderCount"
+      ],
+      "description": "CouponUsed / OrderCount (OrderCount floored at 1)"
+    },
+    {
+      "name": "days_since_order_per_tenure",
+      "sources": [
+        "DaySinceLastOrder",
+        "Tenure"
+      ],
+      "description": "DaySinceLastOrder / (Tenure + 1): recency relative to customer age"
+    }
+  ],
+  "excluded_sensitive": [
+    "Gender",
+    "MaritalStatus"
+  ]
+}
