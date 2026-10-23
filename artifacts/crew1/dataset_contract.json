@@ -230,8 +230,8 @@
   "assumptions": [
     "One row per customer; CustomerID is unique.",
     "Churn is the target: 1 = customer churned, 0 = customer stayed.",
-    "All duplicate rows were removed from the dataset, totaling 556 duplicates dropped.",
-    "Missing values were filled with the median for the following columns: Tenure (9 months), WarehouseToHome (13 km), HourSpendOnApp (3 hours), OrderAmountHikeFromlastYear (15 percent), CouponUsed (1 count), OrderCount (2 count), and DaySinceLastOrder (3 days).",
-    "Inconsistent category spellings were standardized: 'Phone' was merged to 'Mobile Phone', 'CC' to 'Credit Card', 'COD' to 'Cash on Delivery', and 'Mobile' to 'Mobile Phone'."
+    "Missing numeric values were filled with the median of the respective column.",
+    "556 duplicate rows were removed during cleaning.",
+    "Inconsistent category spellings were merged: 'Phone' was changed to 'Mobile Phone', 'CC' was changed to 'Credit Card', and 'COD' was changed to 'Cash on Delivery'."
   ]
 }
